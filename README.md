@@ -60,8 +60,9 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 Title: **ENTER** drive · **SPACE** ride with the AI · **G** race the ghost.
 In game: arrows/WASD or a gamepad · **1/2/3** cameras · **TAB** autopilot ·
-**G** ghost · **R** restart · **M** mute · **F** fullscreen. The first
-browser to connect drives; others spectate.
+**G** ghost · **R** restart · **M** mute · **F** fullscreen · **ESC** quit
+(on the DGX kiosk this also closes the browser). The first browser to
+connect drives; others spectate.
 
 ### DGX Spark
 
@@ -69,6 +70,7 @@ browser to connect drives; others spectate.
 ./deploy_to_dgx.sh          # rsync + venv + tests + acceptance run on AgentForgeDGX.local
 ./play_on_dgx.sh            # 2D game on the DGX's own monitor
 ./play3d_on_dgx.sh          # 3D game: sim server + Firefox kiosk on the DGX monitor
+./play3d_on_dgx.sh AgentForgeDGX.local stop   # or press ESC in the game
 ```
 
 RL training (Stages 1–4, needs torch + SB3):

@@ -66,7 +66,7 @@ export DISPLAY=:1 XAUTHORITY=/run/user/1000/gdm/Xauthority XDG_RUNTIME_DIR=/run/
 xset s off -dpms 2>/dev/null                            # keep the monitor awake for this session
 pkill -f "[p]ython apps/game/play.py" 2>/dev/null      # 2D game would sit on top of the kiosk
 pkill -f "[a]pps/game3d/server.py" 2>/dev/null
-setsid nohup python apps/game3d/server.py --port 8420 "$@" > ~/adrl/game3d.log 2>&1 < /dev/null &
+setsid nohup python apps/game3d/server.py --port 8420 --on-quit 'pkill -f "[f]irefox.*ffprofile"' "$@" > ~/adrl/game3d.log 2>&1 < /dev/null &
 sleep 2
 if ! pgrep -f "[f]irefox.*ffprofile" >/dev/null; then
   setsid nohup firefox --new-instance --profile ~/adrl/ffprofile --kiosk http://localhost:8420 > ~/adrl/firefox.log 2>&1 < /dev/null &
@@ -76,6 +76,13 @@ pgrep -f "[a]pps/game3d/server.py" >/dev/null && echo "sim server running" || { 
 pgrep -f "[f]irefox.*ffprofile" >/dev/null && echo "firefox kiosk running" || { echo "firefox failed:"; tail -20 ~/adrl/firefox.log; }
 EOF
 chmod +x ~/adrl/play3d.sh
+cat > ~/adrl/stop3d.sh <<'STOP'
+#!/usr/bin/env bash
+# Stop the ADRL 3D kiosk and sim server.
+pkill -f "[f]irefox.*ffprofile" 2>/dev/null; pkill -f "[a]pps/game3d/server.py" 2>/dev/null
+sleep 1; echo "ADRL 3D stopped"
+STOP
+chmod +x ~/adrl/stop3d.sh
 
 echo
 echo "Core install OK. Arch: $(uname -m)  Python: $(python --version)"

@@ -17,6 +17,7 @@ import functools
 import http.server
 import json
 import math
+import subprocess
 import sys
 import threading
 import time
@@ -50,6 +51,7 @@ class World:
         self.ghost_engine = Engine()
         self.banner = ("", 0.0)
         self.tick = 0
+        self.quit_requested = False
         self.reset()
 
     def reset(self) -> None:
@@ -94,6 +96,8 @@ class World:
             self.ghost_on = not self.ghost_on
         elif cmd == "reset":
             self.reset()
+        elif cmd == "quit":
+            self.quit_requested = True
 
     def step(self, inp: dict) -> None:
         env = self.env
@@ -225,7 +229,7 @@ class Server:
     async def loop(self):
         period = 1.0 / FPS
         nxt = time.perf_counter()
-        while True:
+        while not self.world.quit_requested:
             inp = self.inputs.get(self.driver_ws, {}) if self.driver_ws else {}
             self.world.step(inp)
             if self.clients:
@@ -273,6 +277,9 @@ async def main_async(args) -> None:
     async with serve(server.handler, "0.0.0.0", args.ws_port, max_queue=4):
         print(f"ADRL 3D: open http://localhost:{args.port}  (ws {args.ws_port})", flush=True)
         await server.loop()
+    print("ADRL 3D: quit requested by the driver", flush=True)
+    if args.on_quit:
+        subprocess.Popen(args.on_quit, shell=True)   # e.g. close the kiosk browser
 
 
 def main() -> int:
@@ -282,6 +289,7 @@ def main() -> int:
     ap.add_argument("--mode", choices=["title", "play", "demo", "race"], default="title")
     ap.add_argument("--port", type=int, default=8000)
     ap.add_argument("--ws-port", type=int, default=8765)
+    ap.add_argument("--on-quit", default="", help="shell command to run when the driver presses ESC")
     args = ap.parse_args()
     try:
         asyncio.run(main_async(args))

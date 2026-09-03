@@ -67,6 +67,7 @@ let camMode = 1;
 let started = false;
 const keys = {};
 let muted = false;
+let quitting = false;
 const chase = { pos: new THREE.Vector3(), look: new THREE.Vector3(), init: false };
 
 // ---------------------------------------------------------------- network
@@ -98,7 +99,7 @@ ws.onmessage = ev => {
 };
 ws.onclose = () => {
   $('connecting').textContent = 'simulator disconnected - reconnecting...'; $('connecting').style.display = 'block';
-  setTimeout(() => location.reload(), 3000);   // kiosk picks up server restarts on its own
+  if (!quitting) setTimeout(() => location.reload(), 3000);   // kiosk picks up server restarts on its own
 };
 
 function send(o) { if (ws.readyState === 1) ws.send(JSON.stringify(o)); }
@@ -133,6 +134,12 @@ window.addEventListener('keydown', e => {
   }
   if (code === 'Tab') { send({ type: 'cmd', cmd: 'autopilot' }); e.preventDefault(); }
   if (code === 'KeyR') send({ type: 'cmd', cmd: 'reset' });
+  if (code === 'Escape') {
+    send({ type: 'cmd', cmd: 'quit' });
+    $('connecting').textContent = 'shutting down - close this tab (Alt+F4 / Cmd+W) if it stays open';
+    $('connecting').style.display = 'block';
+    quitting = true;
+  }
   if (code === 'Digit1') camMode = 1;
   if (code === 'Digit2') camMode = 2;
   if (code === 'Digit3') camMode = 3;
@@ -225,7 +232,7 @@ function updateHud() {
   const cc = state.condition === 'TACKY' ? '#78ff8c' : (state.condition === 'DRYING' ? '#ffc850' : '#ff6e5a');
   $('track').innerHTML = `track <span style="color:${cc}">${state.condition}</span>  mu ${c.mu.toFixed(2)}<br>${state.autopilot ? '<span class="badge">AUTOPILOT</span> ' : ''}${state.ghost_on ? '<span class="badge" style="background:#8a2a2a">GHOST</span>' : ''}${muted ? ' <span class="badge" style="background:#555">MUTED</span>' : ''}`;
   $('banner').style.display = state.banner ? 'block' : 'none'; $('banner').textContent = state.banner;
-  $('status').textContent = `1/2/3 camera  TAB autopilot  G ghost  R restart  M mute  F fullscreen   ${fps.toFixed(0)} fps`;
+  $('status').textContent = `1/2/3 camera  TAB autopilot  G ghost  R restart  M mute  F fullscreen  ESC quit   ${fps.toFixed(0)} fps`;
 }
 
 // ---------------------------------------------------------------- loop
