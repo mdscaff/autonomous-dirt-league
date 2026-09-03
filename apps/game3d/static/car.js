@@ -179,7 +179,7 @@ export function buildLateModel(livName = 'moran99', opts = {}) {
   // Hood: sloped from cowl down to the nose, number reads from the front.
   {
     const hood = new THREE.Mesh(new THREE.BoxGeometry(1.75, 1.85, 0.05), bodyMat);
-    hood.position.set(1.35, 0.05, 0.80); hood.rotation.y = 0.10; g.add(shadow(hood));
+    hood.position.set(1.42, 0.05, 0.775); hood.rotation.y = 0.175;   // cowl 0.93 -> nose 0.62 g.add(shadow(hood));
     decal(hood, 1.85, 1.75, hoodTexture(liv), [0, 0, 0.03], ROT.hood);
     const nose = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.9, 0.5), accentMat);
     nose.position.set(2.2, 0.05, 0.50); nose.rotation.y = 0.25; g.add(shadow(nose));
@@ -187,7 +187,7 @@ export function buildLateModel(livName = 'moran99', opts = {}) {
   }
   // Cowl, rear deck, spoiler with side boards.
   {
-    const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.9, 0.08), bodyMat); cowl.position.set(0.80, 0.05, 0.93); g.add(shadow(cowl));
+    const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.9, 0.05), bodyMat); cowl.position.set(0.58, 0.05, 0.95);   // cowl lip g.add(shadow(cowl));
     const deck = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.95, 0.06), bodyMat); deck.position.set(-1.65, 0.05, 1.05); g.add(shadow(deck));
     const sp = new THREE.Mesh(new THREE.BoxGeometry(0.03, 2.0, 0.34), bodyMat);
     sp.position.set(-2.30, 0.05, 1.22); sp.rotation.y = -0.75; g.add(shadow(sp));
@@ -215,7 +215,7 @@ export function buildLateModel(livName = 'moran99', opts = {}) {
     g.add(tube([0.65, 0.78, 0.95], [-1.05, 0.78, 0.95], r, cageMat));
     for (const z of [0.55, 0.75]) g.add(tube([0.6, 0.86, z], [-1.0, 0.86, z], r * 0.9, cageMat));  // driver-side door bars
     g.add(tube([0.65, -0.62, 0.95], [-1.05, -0.62, 0.95], r, cageMat));
-    g.add(tube(Ar[0], [1.9, 0.6, 0.55], r * 0.8, cageMat), tube(Ar[1], [1.9, -0.5, 0.55], r * 0.8, cageMat)); // front hoop
+    g.add(tube(Ar[0], [0.62, 0.74, 0.96], r * 0.8, cageMat), tube(Ar[1], [0.62, -0.60, 0.96], r * 0.8, cageMat)); // dash bars down to the cowl
     const net = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.4), new THREE.MeshBasicMaterial({ color: 0x111111, transparent: true, opacity: 0.16, side: THREE.DoubleSide }));
     net.position.set(-0.2, 0.86, 1.17); net.rotation.x = Math.PI / 2; g.add(net);
   }
@@ -230,21 +230,23 @@ export function buildLateModel(livName = 'moran99', opts = {}) {
   }
   // Steering wheel: raked so the top leans away from the driver; the column
   // runs forward and down into the firewall (local +x of the pivot).
-  const wheelPivot = new THREE.Group();
-  wheelPivot.position.set(0.40, SEAT_Y, 1.02);   // over the lap, clear of the cowl
-  wheelPivot.rotation.y = 0.55;
+  const wheelRake = new THREE.Group();            // rake only; the column lives here
+  wheelRake.position.set(0.40, SEAT_Y, 1.02);      // over the lap, clear of the cowl
+  wheelRake.rotation.y = 0.55;
+  const wheelPivot = new THREE.Group();           // spins about the column axis (its local x)
+  wheelRake.add(wheelPivot);
   {
     const rim = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.016, 10, 32), new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.7 }));
     rim.rotation.y = Math.PI / 2; wheelPivot.add(rim);
     for (const a of [0, 2.094, 4.189]) {
       const sp = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.16, 0.02), cageMat);
-      sp.position.set(0, Math.cos(a) * 0.085, Math.sin(a) * 0.085); sp.rotation.x = -a; wheelPivot.add(sp);
+      sp.position.set(0, Math.cos(a) * 0.085, Math.sin(a) * 0.085); sp.rotation.x = a; wheelPivot.add(sp);
     }
     const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.05, 12), cageMat); hub.rotation.z = Math.PI / 2; wheelPivot.add(hub);
     const column = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8), cageMat);
-    column.rotation.z = Math.PI / 2; column.position.x = 0.25; wheelPivot.add(column);
+    column.rotation.z = Math.PI / 2; column.position.x = 0.25; wheelRake.add(column);
   }
-  interior.add(wheelPivot);
+  interior.add(wheelRake);
   // Compact gauge cluster on a bracket just left of the column, low enough to
   // see the hood over it.
   const dashMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6, emissive: 0xffffff, emissiveIntensity: 0.55 });
