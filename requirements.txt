@@ -3,7 +3,8 @@ gymnasium>=0.29
 pyyaml>=6.0
 pyarrow>=14.0
 pytest>=8.0
-pygame-ce>=2.5   # apps/game/play.py (playable demo)
+pygame-ce>=2.5   # apps/game/play.py (2D playable demo)
+websockets>=13   # apps/game3d/server.py (3D driver's-eye demo)
 # RL (install on the DGX Spark; torch via CUDA 13 nightly for SM121):
 # stable-baselines3>=2.3
 # torch

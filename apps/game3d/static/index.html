@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>ADRL 3D - Autonomous Dirt Racing League</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  html, body { margin: 0; height: 100%; background: #000; overflow: hidden; font-family: "DejaVu Sans Mono", Menlo, Consolas, monospace; color: #eee; }
+  canvas { display: block; }
+  #hud { position: fixed; inset: 0; pointer-events: none; }
+  .box { position: absolute; background: rgba(0,0,0,.45); padding: 8px 12px; border-radius: 6px; font-size: 15px; line-height: 1.35; white-space: pre; }
+  #laps { top: 14px; left: 14px; }
+  #speed { top: 14px; right: 14px; text-align: right; }
+  #speed b { font-size: 46px; color: #ffd400; }
+  #status { bottom: 14px; left: 14px; font-size: 13px; color: #bbb; }
+  #track { bottom: 14px; right: 14px; text-align: right; }
+  #banner { position: absolute; top: 30%; width: 100%; text-align: center; font-size: 72px; font-weight: bold; color: #ff4c3c; text-shadow: 0 0 20px #000; display: none; }
+  #title { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,.55); pointer-events: auto; }
+  #title h1 { font-family: Impact, "Arial Black", sans-serif; font-size: 64px; color: #ffd400; margin: 0 0 6px; letter-spacing: 2px; }
+  #title h2 { font-weight: normal; font-size: 18px; margin: 0 0 30px; color: #ddd; }
+  #title .menu { font-size: 20px; line-height: 1.8; }
+  #title .menu b { color: #ffd400; display: inline-block; width: 110px; }
+  #title .hint { margin-top: 26px; font-size: 14px; color: #aaa; text-align: center; line-height: 1.6; }
+  #vignette { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 55%, rgba(0,0,0,.55) 100%); }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 3px; background: #2a6fd8; color: #fff; font-size: 12px; }
+  #connecting { position: absolute; top: 45%; width: 100%; text-align: center; font-size: 22px; color: #ccc; }
+</style>
+<script type="importmap">
+  { "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+</head>
+<body>
+<div id="hud">
+  <div id="vignette"></div>
+  <div id="laps" class="box"></div>
+  <div id="speed" class="box"><b>0</b> mph</div>
+  <div id="track" class="box"></div>
+  <div id="status" class="box">1/2/3 camera  TAB autopilot  G ghost  R restart  M mute</div>
+  <div id="banner"></div>
+  <div id="connecting">connecting to simulator...</div>
+  <div id="title" style="display:none">
+    <h1>AUTONOMOUS DIRT RACING LEAGUE</h1>
+    <h2>#99 Devin Moran tribute late model &middot; 3/8-mile dirt oval &middot; live surface model</h2>
+    <div class="menu">
+      <div><b>ENTER</b> fire it up and drive</div>
+      <div><b>SPACE</b> ride along with the AI driver</div>
+      <div><b>G</b> race the AI</div>
+    </div>
+    <div class="hint">Up = throttle &nbsp; Down = brake &nbsp; Left/Right = steer &nbsp; (gamepad works too)<br>
+      1 driver's eye &nbsp; 2 chase &nbsp; 3 TV camera<br>
+      Dirt rewards slip: throw it in, catch the slide, feed the throttle. Wheelspin tears up your own line.</div>
+  </div>
+</div>
+<script type="module" src="./app.js"></script>
+</body>
+</html>

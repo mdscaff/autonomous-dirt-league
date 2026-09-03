@@ -39,6 +39,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from adrl.agents.baseline import BaselineDriver
+from adrl.agents.human import HumanInput
 from adrl.environment.race_env import DirtOvalEnv
 
 FPS = 60
@@ -63,55 +64,43 @@ CAR_DRAW_SCALE = 1.6          # sprite enlargement so cars read at full-track zo
 
 # ----------------------------------------------------------------------
 class KeyboardModel:
-    """Turn held keys into smooth continuous actions.
-
-    Steer authority shrinks with speed so a held arrow at 80 mph is a
-    committed corner entry, not an instant spin. Taps give small inputs.
-    """
+    """pygame keys/joystick -> HumanInput (shared with the 3D game)."""
 
     def __init__(self):
-        self.steer = 0.0
-        self.throttle = 0.0
-        self.brake = 0.0
+        self.model = HumanInput()
         self.joy = None
         if pygame.joystick.get_count() > 0:
             self.joy = pygame.joystick.Joystick(0)
             self.joy.init()
 
+    @property
+    def steer(self) -> float:
+        return self.model.steer
+
     def reset(self):
-        self.steer = self.throttle = self.brake = 0.0
+        self.model.reset()
 
     def update(self, keys, dt: float, speed: float) -> np.ndarray:
-        target = 0.0
-        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
-            target += 1.0
-        if keys[pygame.K_RIGHT] or keys[pygame.K_d]:
-            target -= 1.0
-        gas = keys[pygame.K_UP] or keys[pygame.K_w]
-        stop = keys[pygame.K_DOWN] or keys[pygame.K_s]
-
+        steer_axis = thr_axis = brk_axis = None
         if self.joy is not None:
-            ax = self.joy.get_axis(0)
-            if abs(ax) > 0.12:
-                target = -ax
+            steer_axis = -self.joy.get_axis(0)
             # Common layouts: right trigger axis 5, left trigger axis 2 (rest at -1).
             if self.joy.get_numaxes() >= 6:
-                gas = gas or (self.joy.get_axis(5) + 1) / 2 > 0.1
-                stop = stop or (self.joy.get_axis(2) + 1) / 2 > 0.1
+                thr_axis = (self.joy.get_axis(5) + 1) / 2
+                brk_axis = (self.joy.get_axis(2) + 1) / 2
             if self.joy.get_numbuttons() > 1:
-                gas = gas or self.joy.get_button(0)
-                stop = stop or self.joy.get_button(1)
-
-        authority = float(np.clip(1.0 - (speed - 8.0) / 42.0, 0.35, 1.0))
-        target *= authority
-        rate = 3.0 if abs(target) > abs(self.steer) else 7.0
-        self.steer += float(np.clip(target - self.steer, -rate * dt, rate * dt))
-
-        self.throttle += (3.0 if gas else -6.0) * dt
-        self.brake += (4.0 if stop else -8.0) * dt
-        self.throttle = float(np.clip(self.throttle, 0.0, 1.0))
-        self.brake = float(np.clip(self.brake, 0.0, 1.0))
-        return np.array([self.steer, self.throttle, self.brake], np.float32)
+                if self.joy.get_button(0):
+                    thr_axis = 1.0
+                if self.joy.get_button(1):
+                    brk_axis = 1.0
+        return self.model.update(
+            dt, speed,
+            left=bool(keys[pygame.K_LEFT] or keys[pygame.K_a]),
+            right=bool(keys[pygame.K_RIGHT] or keys[pygame.K_d]),
+            gas=bool(keys[pygame.K_UP] or keys[pygame.K_w]),
+            brake=bool(keys[pygame.K_DOWN] or keys[pygame.K_s]),
+            steer_axis=steer_axis, throttle_axis=thr_axis, brake_axis=brk_axis,
+        )
 
 
 # ----------------------------------------------------------------------

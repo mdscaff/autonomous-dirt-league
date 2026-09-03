@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "game3d",
+      "runtimeExecutable": "/private/tmp/claude-501/-Users-marvinscaff-development-racing-sim/18cdf1c7-6d26-46dc-a245-424cf51dd3af/scratchpad/autonomous-dirt-league/.venv/bin/python",
+      "runtimeArgs": ["apps/game3d/server.py", "--mode", "demo"],
+      "port": 8000
+    }
+  ]
+}

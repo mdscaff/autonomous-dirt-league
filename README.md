@@ -40,11 +40,35 @@ In game: arrows/WASD drive · **TAB** autopilot · **G** ghost · **H** cycle
 overlay (grip / moisture / compaction / loose) · **R** fresh surface ·
 **F** fullscreen · **ESC** quit.
 
+### 3D driver's-eye demo
+
+`apps/game3d/` is the 3D version: `server.py` steps the same physics at 60 Hz
+and streams state over a WebSocket; the three.js client (`static/`, vendored,
+no internet needed) renders a dusk dirt oval under the lights with a
+procedural #99 blue-and-white late model, driver's-eye / chase / infield TV
+cameras, a working dash (tach with shift lights, water, oil, fuel, volts,
+lap readout), procedural V8 engine + tire + wind audio via Web Audio, roost
+particles, and the live surface grid as a dirt heatmap on the track mesh.
+Engine speed comes from `adrl/vehicle/engine.py` (2-speed, quick-change
+final drive, wheelspin overspeed, rev limiter) and is presentational only.
+
+```bash
+pip install websockets
+python apps/game3d/server.py            # then open http://localhost:8000
+python apps/game3d/server.py --mode demo --port 8420
+```
+
+Title: **ENTER** drive · **SPACE** ride with the AI · **G** race the ghost.
+In game: arrows/WASD or a gamepad · **1/2/3** cameras · **TAB** autopilot ·
+**G** ghost · **R** restart · **M** mute · **F** fullscreen. The first
+browser to connect drives; others spectate.
+
 ### DGX Spark
 
 ```bash
 ./deploy_to_dgx.sh          # rsync + venv + tests + acceptance run on AgentForgeDGX.local
-./play_on_dgx.sh            # launch the game on the DGX's own monitor
+./play_on_dgx.sh            # 2D game on the DGX's own monitor
+./play3d_on_dgx.sh          # 3D game: sim server + Firefox kiosk on the DGX monitor
 ```
 
 RL training (Stages 1–4, needs torch + SB3):
