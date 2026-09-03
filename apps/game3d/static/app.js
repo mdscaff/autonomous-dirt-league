@@ -71,7 +71,8 @@ let quitting = false;
 const chase = { pos: new THREE.Vector3(), look: new THREE.Vector3(), init: false };
 
 // ---------------------------------------------------------------- network
-const ws = new WebSocket(`ws://${location.hostname}:8765`);
+const WS_PORT = new URLSearchParams(location.search).get('ws') || 8765;   // ?ws=PORT to match --ws-port
+const ws = new WebSocket(`ws://${location.hostname}:${WS_PORT}`);
 ws.binaryType = 'arraybuffer';
 ws.onmessage = ev => {
   if (ev.data instanceof ArrayBuffer) {
@@ -98,7 +99,8 @@ ws.onmessage = ev => {
   }
 };
 ws.onclose = () => {
-  $('connecting').textContent = 'simulator disconnected - reconnecting...'; $('connecting').style.display = 'block';
+  if (!quitting) $('connecting').textContent = 'simulator disconnected - reconnecting...';
+  $('connecting').style.display = 'block';
   if (!quitting) setTimeout(() => location.reload(), 3000);   // kiosk picks up server restarts on its own
 };
 
