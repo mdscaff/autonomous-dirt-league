@@ -103,7 +103,7 @@ ws.onclose = () => {
 
 function send(o) { if (ws.readyState === 1) ws.send(JSON.stringify(o)); }
 // Debug handle for the console / automated checks.
-window.adrl = { audio, get state() { return state; }, get camMode() { return camMode; }, get fps() { return fps; } };
+window.adrl = { audio, camera, freeCam: false, get state() { return state; }, get camMode() { return camMode; }, get fps() { return fps; } };
 
 // ---------------------------------------------------------------- input
 // Some input paths deliver events without e.code; derive it from e.key.
@@ -180,6 +180,7 @@ let frames = 0, fpsT = lastT, fps = 0;
 let camShake = 0;
 
 function updateCamera(dt) {
+  if (window.adrl.freeCam) return;   // debug: leave the camera where a script put it
   const c = state.car;
   car.group.updateMatrixWorld();
   if (camMode === 1) {

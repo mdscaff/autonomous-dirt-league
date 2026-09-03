@@ -216,17 +216,32 @@ export function buildTrack(scene, info) {
       m.position.set(0, -(WD + 8 + i * 1.2), 0.45 + i * 0.9);
       m.receiveShadow = true; gs.add(m);
     }
-    // Crowd: instanced little blocks with random warm colors.
-    const n = 2200;
-    const crowd = new THREE.InstancedMesh(new THREE.BoxGeometry(0.4, 0.35, 0.8), new THREE.MeshStandardMaterial({ roughness: 1 }), n);
+    // Crowd: instanced people (torso + head), mostly seated, some standing.
+    const n = 2600;
+    const shirt = new THREE.MeshStandardMaterial({ roughness: 0.9 });
+    const skin = new THREE.MeshStandardMaterial({ roughness: 0.8 });
+    const torsoGeo = new THREE.CapsuleGeometry(0.17, 0.42, 3, 8); torsoGeo.rotateX(Math.PI / 2);   // capsule axis -> z
+    const headGeo = new THREE.SphereGeometry(0.11, 8, 7);
+    const torsos = new THREE.InstancedMesh(torsoGeo, shirt, n);
+    const heads = new THREE.InstancedMesh(headGeo, skin, n);
     const M = new THREE.Matrix4(); const C = new THREE.Color();
+    const SKINS = [0xf1c9a5, 0xd9a577, 0xb07a4a, 0x8d5a34, 0x5c3a21, 0xf6d7bd];
     for (let i = 0; i < n; i++) {
       const row = Math.floor(Math.random() * steps);
-      M.makeTranslation((Math.random() - 0.5) * len, -(WD + 8 + row * 1.2) + (Math.random() - 0.5) * 0.5, 0.9 + row * 0.9 + 0.4);
-      crowd.setMatrixAt(i, M);
-      C.setHSL(Math.random(), 0.55, 0.35 + Math.random() * 0.35); crowd.setColorAt(i, C);
+      const standing = Math.random() < 0.18;
+      const x = (Math.random() - 0.5) * len;
+      const y = -(WD + 8 + row * 1.2) + (Math.random() - 0.5) * 0.35;
+      const base = 0.9 + row * 0.9;                       // top of this bleacher step
+      const torsoZ = base + (standing ? 1.05 : 0.62);
+      const s = 0.85 + Math.random() * 0.3;
+      M.makeRotationZ(Math.random() * 0.6 - 0.3).scale(new THREE.Vector3(s, s, standing ? s * 1.15 : s * 0.8)).setPosition(x, y, torsoZ);
+      torsos.setMatrixAt(i, M);
+      M.makeScale(s, s, s).setPosition(x, y, torsoZ + (standing ? 0.42 : 0.36) * s);
+      heads.setMatrixAt(i, M);
+      C.setHSL(Math.random(), 0.5 + Math.random() * 0.4, 0.25 + Math.random() * 0.45); torsos.setColorAt(i, C);
+      C.set(SKINS[Math.floor(Math.random() * SKINS.length)]); heads.setColorAt(i, C);
     }
-    gs.add(crowd);
+    gs.add(torsos, heads);
     const roof = new THREE.Mesh(new THREE.BoxGeometry(len + 4, steps * 1.2 + 4, 0.3), new THREE.MeshStandardMaterial({ color: 0x334455, metalness: 0.4, roughness: 0.6 }));
     roof.position.set(0, -(WD + 8 + steps * 0.6), steps * 0.9 + 4); roof.castShadow = true; gs.add(roof);
     for (const x of [-len / 2, 0, len / 2]) {

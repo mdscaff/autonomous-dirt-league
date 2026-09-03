@@ -187,7 +187,7 @@ export function buildLateModel(livName = 'moran99', opts = {}) {
   }
   // Cowl, rear deck, spoiler with side boards.
   {
-    const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.9, 0.08), bodyMat); cowl.position.set(0.55, 0.05, 0.93); g.add(shadow(cowl));
+    const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.45, 1.9, 0.08), bodyMat); cowl.position.set(0.80, 0.05, 0.93); g.add(shadow(cowl));
     const deck = new THREE.Mesh(new THREE.BoxGeometry(1.5, 1.95, 0.06), bodyMat); deck.position.set(-1.65, 0.05, 1.05); g.add(shadow(deck));
     const sp = new THREE.Mesh(new THREE.BoxGeometry(0.03, 2.0, 0.34), bodyMat);
     sp.position.set(-2.30, 0.05, 1.22); sp.rotation.y = -0.75; g.add(shadow(sp));
@@ -231,7 +231,7 @@ export function buildLateModel(livName = 'moran99', opts = {}) {
   // Steering wheel: raked so the top leans away from the driver; the column
   // runs forward and down into the firewall (local +x of the pivot).
   const wheelPivot = new THREE.Group();
-  wheelPivot.position.set(0.55, SEAT_Y, 0.93);
+  wheelPivot.position.set(0.40, SEAT_Y, 1.02);   // over the lap, clear of the cowl
   wheelPivot.rotation.y = 0.55;
   {
     const rim = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.016, 10, 32), new THREE.MeshStandardMaterial({ color: 0x151515, roughness: 0.7 }));
@@ -249,7 +249,7 @@ export function buildLateModel(livName = 'moran99', opts = {}) {
   // see the hood over it.
   const dashMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.6, emissive: 0xffffff, emissiveIntensity: 0.55 });
   const dash = new THREE.Mesh(new THREE.PlaneGeometry(0.48, 0.13), dashMaterial);
-  dash.position.set(0.88, SEAT_Y + 0.02, 0.97);
+  dash.position.set(0.90, SEAT_Y + 0.02, 1.09);
   dash.lookAt(dash.position.x - 1, dash.position.y, dash.position.z);   // face the driver
   dash.rotateX(-0.5);                                                    // tilt up toward the eyes
   interior.add(dash);
