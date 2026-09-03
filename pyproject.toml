@@ -1,0 +1,14 @@
+[project]
+name = "adrl"
+version = "0.1.0"
+description = "Autonomous Dirt Racing League - Phase 1 simulator"
+requires-python = ">=3.11"
+
+[tool.black]
+line-length = 100
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

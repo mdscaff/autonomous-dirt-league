@@ -1,0 +1,68 @@
+## ADRL Phase 1 default configuration
+## All physical units SI unless noted.
+
+seed: 42
+
+sim:
+  dt: 0.01              # physics step [s]
+  control_dt: 0.05      # agent decision period [s] (20 Hz)
+  max_episode_time: 1000.0
+
+track:
+  # 3/8-mile dirt oval (~603 m centerline)
+  length_miles: 0.375
+  straight_fraction: 0.42   # fraction of centerline length in the two straights
+  width: 18.0               # racing surface width [m]
+  banking_deg: 8.0          # constant banking (Phase 1 simplification)
+  wall_margin: 0.5          # distance beyond half-width where wall contact registers
+  n_centerline_points: 800
+
+surface:
+  grid_ds: 2.0        # longitudinal cell size along centerline [m]
+  grid_dl: 1.5        # lateral cell size [m]
+  base_friction: 0.52
+  min_friction: 0.30          # slick, dry-slick worst case
+  max_friction: 0.75
+  base_moisture: 0.55         # 0 = dust, 1 = mud
+  moisture_dry_rate: 0.00008  # per second, global drying
+  compaction_per_pass: 0.035
+  loose_per_pass: 0.02        # loose material kicked up per tire pass
+  loose_settle_rate: 0.0005
+  cushion_lateral_frac: 0.75  # loose dirt migrates toward this lateral fraction (the cushion)
+  moisture_friction_gain: 0.18
+  compaction_friction_gain: 0.10
+  loose_friction_penalty: 0.30
+
+vehicle:
+  # Generic dirt late model, approximate figures
+  mass: 1050.0          # car + driver-equivalent ballast [kg]
+  yaw_inertia: 1400.0   # [kg m^2]
+  wheelbase: 2.31       # [m] (~91 in)
+  cg_to_front: 1.27     # left-rear weight bias approximated via long. split
+  cg_height: 0.42
+  track_width: 1.68
+  max_steer_deg: 22.0
+  steer_rate_deg: 180.0     # steering slew rate
+  max_engine_force: 9500.0  # ~800+ hp through gearing, traction limited anyway
+  max_brake_force: 12000.0
+  drag_coeff: 1.05          # CdA lumped
+  downforce_coeff: 1.9      # ClA lumped (body + spoiler side-force ignored Phase 1)
+  rolling_resistance: 0.018
+  tire:
+    B: 7.5      # Pacejka stiffness (dirt: low B, broad peak)
+    C: 1.45     # shape
+    E: -0.6     # curvature
+    peak_slip_angle_deg: 12.0   # dirt tires peak at high slip
+    relaxation_length: 0.6
+
+reward:
+  progress: 1.0             # per meter of forward progress
+  lap_bonus: 50.0
+  target_slip_deg: 10.0     # controlled oversteer target in corners
+  slip_tracking: 0.15
+  smoothness: -0.02         # action delta penalty
+  wall_contact: -100.0
+  spin: -60.0
+  reverse: -1.0
+  off_track: -2.0           # per step beyond track edge
+  wheelspin: -0.05
