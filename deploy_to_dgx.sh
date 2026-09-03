@@ -63,6 +63,7 @@ cat > ~/adrl/play3d.sh <<'EOF'
 cd ~/adrl/autonomous-dirt-league
 source .venv/bin/activate
 export DISPLAY=:1 XAUTHORITY=/run/user/1000/gdm/Xauthority XDG_RUNTIME_DIR=/run/user/1000
+xset s off -dpms 2>/dev/null                            # keep the monitor awake for this session
 pkill -f "[p]ython apps/game/play.py" 2>/dev/null      # 2D game would sit on top of the kiosk
 pkill -f "[a]pps/game3d/server.py" 2>/dev/null
 setsid nohup python apps/game3d/server.py --port 8420 "$@" > ~/adrl/game3d.log 2>&1 < /dev/null &

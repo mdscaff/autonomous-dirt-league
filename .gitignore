@@ -11,3 +11,4 @@ artifacts/*.parquet
 # Packaged copies of this repo / editor cruft
 *.zip
 .DS_Store
+.claude/
