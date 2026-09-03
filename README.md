@@ -53,9 +53,9 @@ Engine speed comes from `adrl/vehicle/engine.py` (2-speed, quick-change
 final drive, wheelspin overspeed, rev limiter) and is presentational only.
 
 ```bash
-pip install websockets
-python apps/game3d/server.py            # then open http://localhost:8000
-python apps/game3d/server.py --mode demo --port 8420
+python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+./play3d.sh                             # server + opens http://localhost:8000
+.venv/bin/python apps/game3d/server.py --mode demo --port 8420
 ```
 
 Title: **ENTER** drive · **SPACE** ride with the AI · **G** race the ghost.
