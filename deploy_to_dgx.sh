@@ -36,7 +36,10 @@ cat > ~/adrl/play.sh <<'EOF'
 #!/usr/bin/env bash
 cd ~/adrl/autonomous-dirt-league
 source .venv/bin/activate
-export DISPLAY=:1 XAUTHORITY=/run/user/1000/gdm/Xauthority
+SID=$(loginctl list-sessions --no-legend | awk -v u="$USER" '$3==u && $4=="seat0"{print $1; exit}')
+DISP=$(loginctl show-session "${SID:-x}" -p Display --value 2>/dev/null)
+[ -n "$SID" ] || { echo "No desktop session for $USER on the DGX - log in at the monitor first."; exit 1; }
+export DISPLAY="${DISP:-:1}" XAUTHORITY=/run/user/$(id -u)/gdm/Xauthority
 exec python apps/game/play.py "$@"
 EOF
 chmod +x ~/adrl/play.sh
@@ -62,7 +65,11 @@ cat > ~/adrl/play3d.sh <<'EOF'
 # Usage: ~/adrl/play3d.sh [server args]   e.g. --mode demo
 cd ~/adrl/autonomous-dirt-league
 source .venv/bin/activate
-export DISPLAY=:1 XAUTHORITY=/run/user/1000/gdm/Xauthority XDG_RUNTIME_DIR=/run/user/1000
+# Find the logged-in desktop session's display (GDM greeter holds :0; the user session is usually :1).
+SID=$(loginctl list-sessions --no-legend | awk -v u="$USER" '$3==u && $4=="seat0"{print $1; exit}')
+DISP=$(loginctl show-session "${SID:-x}" -p Display --value 2>/dev/null)
+[ -n "$SID" ] || { echo "No desktop session for $USER on the DGX - log in at the monitor first, then rerun."; exit 1; }
+export DISPLAY="${DISP:-:1}" XAUTHORITY=/run/user/$(id -u)/gdm/Xauthority XDG_RUNTIME_DIR=/run/user/$(id -u)
 xset s off -dpms 2>/dev/null                            # keep the monitor awake for this session
 pkill -f "[p]ython apps/game/play.py" 2>/dev/null      # 2D game would sit on top of the kiosk
 pkill -f "[a]pps/game3d/server.py" 2>/dev/null
