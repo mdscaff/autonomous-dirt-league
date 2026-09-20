@@ -40,13 +40,14 @@ FPS = 60
 # Game-only "fast" tune: a tacky, heavily banked bullring and a full-aero super late
 # model. Applied on top of the research config (which stays untouched) unless --stock.
 FAST_TUNE = {
-    "track": {"banking_deg": 14.0},
-    "surface": {"base_friction": 0.86, "min_friction": 0.55, "max_friction": 1.30},
-    "vehicle": {"max_engine_force": 14000.0, "max_brake_force": 15000.0, "downforce_coeff": 4.5, "drag_coeff": 1.0},
+    "track": {"banking_deg": 22.0},                                   # Eldora-style high banks
+    "surface": {"base_friction": 1.20, "min_friction": 0.82, "max_friction": 1.70},
+    "vehicle": {"max_engine_force": 20000.0, "max_brake_force": 23000.0, "downforce_coeff": 7.5, "drag_coeff": 1.0},
 }
-# AI settings swept headless on this tune: 21 s laps, ~92 mph, no crashes over 19 laps
-# as the track dries. Aggression above ~1.0 starts finding the wall.
-FAST_AI = {"aggression": 0.96, "v_max": 55.0, "throttle_max": 0.85, "aero_aware": True, "brake_decel": 7.0}
+# AI settings swept headless on this tune: ~16.6 s laps, ~119 mph, ~67 mph mid-corner, no
+# crashes over 28 laps as the track dries. Aggression 0.98 starts finding the wall.
+FAST_AI = {"aggression": 0.95, "v_max": 70.0, "throttle_max": 0.9, "aero_aware": True, "brake_decel": 11.0}
+FAST_FINAL_DRIVE = 5.4      # keeps ~120 mph under the 8000 rpm limiter
 SURFACE_EVERY = 12          # surface grid broadcast cadence (5 Hz)
 STATIC = Path(__file__).resolve().parent / "static"
 
@@ -288,7 +289,7 @@ def load_config(path: str, fast: bool = True) -> dict:
 async def main_async(args) -> None:
     cfg = load_config(args.config if Path(args.config).is_absolute() else str(ROOT / args.config), fast=not args.stock)
     seed = args.seed if args.seed is not None else cfg["seed"]
-    world = World(cfg, seed, args.mode, ai=None if args.stock else FAST_AI, final_drive=None if args.stock else 6.0)
+    world = World(cfg, seed, args.mode, ai=None if args.stock else FAST_AI, final_drive=None if args.stock else FAST_FINAL_DRIVE)
     server = Server(world)
     serve_static(args.port)
     async with serve(server.handler, "0.0.0.0", args.ws_port, max_queue=4):

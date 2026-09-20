@@ -59,8 +59,8 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 ```
 
 The 3D game runs a **fast tune** on top of the research config (tacky surface,
-14° banking, more downforce and power; AI plans with downforce and braking
-distance): about 21 s laps and 90+ mph versus 35 s and 65 mph stock. Pass
+22° banking, more downforce and power; AI plans with downforce and braking
+distance): about 16.6 s laps and ~120 mph versus 35 s and 65 mph stock. Pass
 `--stock` to `server.py` for the unmodified research physics. `configs/default.yaml`
 is never changed by the game.
 
