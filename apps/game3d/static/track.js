@@ -209,11 +209,12 @@ export function buildTrack(scene, info) {
   // ---- grandstand along the front straight (outside, -y) ------------------
   {
     const gs = new THREE.Group();
+    const Y0 = cl[0][1];          // front-straight centerline (the oval is centered on the origin)
     const seatMat = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, roughness: 0.9 });
     const steps = 14, len = 110;
     for (let i = 0; i < steps; i++) {
       const m = new THREE.Mesh(new THREE.BoxGeometry(len, 1.2, 0.9), seatMat);
-      m.position.set(0, -(WD + 8 + i * 1.2), 0.45 + i * 0.9);
+      m.position.set(0, Y0 - (WD + 8 + i * 1.2), 0.45 + i * 0.9);
       m.receiveShadow = true; gs.add(m);
     }
     // Crowd: instanced people (torso + head), mostly seated, some standing.
@@ -230,7 +231,7 @@ export function buildTrack(scene, info) {
       const row = Math.floor(Math.random() * steps);
       const standing = Math.random() < 0.18;
       const x = (Math.random() - 0.5) * len;
-      const y = -(WD + 8 + row * 1.2) + (Math.random() - 0.5) * 0.35;
+      const y = Y0 - (WD + 8 + row * 1.2) + (Math.random() - 0.5) * 0.35;
       const base = 0.9 + row * 0.9;                       // top of this bleacher step
       const torsoZ = base + (standing ? 1.05 : 0.62);
       const s = 0.85 + Math.random() * 0.3;
@@ -243,10 +244,10 @@ export function buildTrack(scene, info) {
     }
     gs.add(torsos, heads);
     const roof = new THREE.Mesh(new THREE.BoxGeometry(len + 4, steps * 1.2 + 4, 0.3), new THREE.MeshStandardMaterial({ color: 0x334455, metalness: 0.4, roughness: 0.6 }));
-    roof.position.set(0, -(WD + 8 + steps * 0.6), steps * 0.9 + 4); roof.castShadow = true; gs.add(roof);
+    roof.position.set(0, Y0 - (WD + 8 + steps * 0.6), steps * 0.9 + 4); roof.castShadow = true; gs.add(roof);
     for (const x of [-len / 2, 0, len / 2]) {
       const col = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.25, steps * 0.9 + 4, 8), seatMat);
-      col.rotation.x = Math.PI / 2; col.position.set(x, -(WD + 8 + steps * 1.2), (steps * 0.9 + 4) / 2); gs.add(col);
+      col.rotation.x = Math.PI / 2; col.position.set(x, Y0 - (WD + 8 + steps * 1.2), (steps * 0.9 + 4) / 2); gs.add(col);
     }
     group.add(gs);
 

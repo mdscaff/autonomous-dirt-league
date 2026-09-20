@@ -38,6 +38,7 @@ cd ~/adrl/autonomous-dirt-league
 source .venv/bin/activate
 SID=$(loginctl list-sessions --no-legend | awk -v u="$USER" '$3==u && $4=="seat0"{print $1; exit}')
 DISP=$(loginctl show-session "${SID:-x}" -p Display --value 2>/dev/null)
+[ -n "$DISP" ] || DISP=":$(ls /tmp/.X11-unix 2>/dev/null | sed 's/^X//' | sort -n | tail -1)"   # loginctl often omits it
 [ -n "$SID" ] || { echo "No desktop session for $USER on the DGX - log in at the monitor first."; exit 1; }
 export DISPLAY="${DISP:-:1}" XAUTHORITY=/run/user/$(id -u)/gdm/Xauthority
 exec python apps/game/play.py "$@"
@@ -68,6 +69,7 @@ source .venv/bin/activate
 # Find the logged-in desktop session's display (GDM greeter holds :0; the user session is usually :1).
 SID=$(loginctl list-sessions --no-legend | awk -v u="$USER" '$3==u && $4=="seat0"{print $1; exit}')
 DISP=$(loginctl show-session "${SID:-x}" -p Display --value 2>/dev/null)
+[ -n "$DISP" ] || DISP=":$(ls /tmp/.X11-unix 2>/dev/null | sed 's/^X//' | sort -n | tail -1)"   # loginctl often omits it
 [ -n "$SID" ] || { echo "No desktop session for $USER on the DGX - log in at the monitor first, then rerun."; exit 1; }
 export DISPLAY="${DISP:-:1}" XAUTHORITY=/run/user/$(id -u)/gdm/Xauthority XDG_RUNTIME_DIR=/run/user/$(id -u)
 xset s off -dpms 2>/dev/null                            # keep the monitor awake for this session
