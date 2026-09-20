@@ -78,7 +78,10 @@ pkill -f "[a]pps/game3d/server.py" 2>/dev/null
 setsid nohup python apps/game3d/server.py --port 8420 --on-quit 'pkill -f "[f]irefox.*ffprofile"' "$@" > ~/adrl/game3d.log 2>&1 < /dev/null &
 sleep 2
 if ! pgrep -f "[f]irefox.*ffprofile" >/dev/null; then
-  setsid nohup firefox --new-instance --profile ~/adrl/ffprofile --kiosk http://localhost:8420 > ~/adrl/firefox.log 2>&1 < /dev/null &
+  # Hold a GNOME idle inhibitor while the kiosk is up so the desktop doesn't blank/lock mid-race.
+  export DBUS_SESSION_BUS_ADDRESS="unix:path=/run/user/$(id -u)/bus"
+  INHIBIT=""; command -v gnome-session-inhibit >/dev/null && INHIBIT="gnome-session-inhibit --inhibit idle --reason ADRL-racing-game"
+  setsid nohup $INHIBIT firefox --new-instance --profile ~/adrl/ffprofile --kiosk http://localhost:8420 > ~/adrl/firefox.log 2>&1 < /dev/null &
 fi
 sleep 3
 pgrep -f "[a]pps/game3d/server.py" >/dev/null && echo "sim server running" || { echo "server failed:"; cat ~/adrl/game3d.log; }
