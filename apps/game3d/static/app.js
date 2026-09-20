@@ -58,7 +58,8 @@ scene.add(key); scene.add(key.target);
 
 // ---------------------------------------------------------------- state
 let track = null, info = null;
-let car = null, ghost = null;
+let car = null;
+const opps = new Map();        // id -> { model, livery }
 const dash = new Dash();
 const audio = new EngineAudio();
 const dust = new Dust(scene);
@@ -90,12 +91,14 @@ ws.onmessage = ev => {
     // Two shadow-casting pole lights near the front straight; the rest are cheap.
     track.poleLights.forEach((l, i) => { if (i === 0 || i === 11) { l.castShadow = true; l.shadow.mapSize.set(1024, 1024); l.shadow.bias = -0.002; } });
     car = buildLateModel('moran99'); car.dashMaterial.map = dash.texture; car.dashMaterial.emissiveMap = dash.texture; car.dashMaterial.needsUpdate = true; scene.add(car.group);
-    ghost = buildLateModel('ghost1', { ghost: true }); ghost.group.visible = false; scene.add(ghost.group);
     $('connecting').style.display = 'none';
   } else if (msg.type === 'state') {
     prevState = state; state = msg;
     if (state.title && !started) $('title').style.display = 'flex'; else $('title').style.display = 'none';
     audio.update(state, camMode);
+    let near = null, nd = 1e9;
+    for (const o of state.cars || []) { const d = Math.hypot(o.x - state.car.x, o.y - state.car.y); if (d < nd) { nd = d; near = o; } }
+    audio.updateOther(near && nd < 80 ? near : null, nd);
   }
 };
 ws.onclose = () => {
@@ -207,7 +210,7 @@ function updateCamera(dt) {
     const latG = (c.speed * c.yaw_rate) / 9.81;
     const eye = car.eye.position;
     const eyeLocal = new THREE.Vector3(eye.x, eye.y - latG * 0.05, eye.z + Math.sin(performance.now() / 1000 * c.rpm / 60 * 2 * Math.PI) * 0.0012 * (c.rpm / 8300) * (0.4 + c.throttle));
-    camShake += (Math.abs(c.slip) * 0.5 + c.spin * 0.3 - camShake) * Math.min(1, dt * 8);
+    camShake += (Math.abs(c.slip) * 0.5 + c.spin * 0.3 + (state.hit || 0) * 6 - camShake) * Math.min(1, dt * 8);
     eyeLocal.y += (Math.random() - 0.5) * 0.004 * camShake; eyeLocal.z += (Math.random() - 0.5) * 0.004 * camShake;
     const eyeW = eyeLocal.applyMatrix4(car.group.matrixWorld);
     const lookYaw = -c.slip * 0.55 + c.steer * 0.35;
@@ -238,13 +241,20 @@ function updateCamera(dt) {
 function updateHud() {
   const c = state.car;
   $('speed').innerHTML = `<b>${Math.round(c.speed * MPH)}</b> mph<br><span style="color:#aaa">${Math.round(c.rpm)} rpm &middot; slip ${(c.slip * 57.3).toFixed(1)}&deg;${c.spin > 0.1 ? ' &middot; <span style="color:#ff7a5c">wheelspin</span>' : ''}</span>`;
-  const gap = state.gap !== undefined ? `\ngap ${state.gap > 0 ? '+' : ''}${state.gap.toFixed(1)} m` : '';
-  const gl = state.ghost_last ? `  (AI ${state.ghost_last.toFixed(2)})` : '';
-  $('laps').textContent = `LAP ${c.lap + 1}   ${c.lap_time.toFixed(2)}\nlast ${state.last ? state.last.toFixed(2) : '--.--'}${gl}\nbest ${state.best ? state.best.toFixed(2) : '--.--'}${gap}\ncrashes ${state.crashes}`;
+  const rc = state.race;
+  if (rc) {
+    $('laps').textContent = `P${rc.pos}/${rc.n}   LAP ${rc.lap}/${rc.laps}   ${rc.time.toFixed(1)}s\nlap ${c.lap_time.toFixed(2)}  last ${state.last ? state.last.toFixed(2) : '--.--'}  best ${state.best ? state.best.toFixed(2) : '--.--'}\ncrashes ${state.crashes}`;
+    $('board').style.display = 'block';
+    $('board').innerHTML = rc.order.map((o, i) => `<div class="${o.me ? 'me' : ''}">${String(i + 1).padStart(2)}  #${o.num.padEnd(3)} ${o.name.padEnd(10)} ${o.done ? 'FIN' : (i === 0 ? 'leader' : '+' + o.gap.toFixed(1) + 's')}</div>`).join('');
+  } else {
+    $('laps').textContent = `PRACTICE   LAP ${c.lap + 1}   ${c.lap_time.toFixed(2)}\nlast ${state.last ? state.last.toFixed(2) : '--.--'}\nbest ${state.best ? state.best.toFixed(2) : '--.--'}\ncrashes ${state.crashes}`;
+    $('board').style.display = 'none';
+  }
   const cc = state.condition === 'TACKY' ? '#78ff8c' : (state.condition === 'DRYING' ? '#ffc850' : '#ff6e5a');
-  $('track').innerHTML = `track <span style="color:${cc}">${state.condition}</span>  mu ${c.mu.toFixed(2)}<br>${state.autopilot ? '<span class="badge">AUTOPILOT</span> ' : ''}${state.ghost_on ? '<span class="badge" style="background:#8a2a2a">GHOST</span>' : ''}${muted ? ' <span class="badge" style="background:#555">MUTED</span>' : ''}`;
+  $('track').innerHTML = `track <span style="color:${cc}">${state.condition}</span>  mu ${c.mu.toFixed(2)}<br>${state.autopilot ? '<span class="badge">AUTOPILOT</span> ' : ''}${rc ? '<span class="badge" style="background:#8a2a2a">RACE</span>' : '<span class="badge" style="background:#2a6a3a">PRACTICE</span>'}${muted ? ' <span class="badge" style="background:#555">MUTED</span>' : ''}`;
   $('banner').style.display = state.banner ? 'block' : 'none'; $('banner').textContent = state.banner;
-  $('status').textContent = `1/2/3 camera  TAB autopilot  G ghost  R restart  M mute  F fullscreen  ESC quit   ${fps.toFixed(0)} fps`;
+  $('banner').style.color = /GREEN/.test(state.banner) ? '#3cff6a' : (/^[0-9]$/.test(state.banner) ? '#ffd400' : (/FINISHED/.test(state.banner) ? '#ffd400' : '#ff4c3c'));
+  $('status').textContent = `1/2/3 camera  TAB autopilot  G field on/off  R restart  M mute  F fullscreen  ESC quit   ${fps.toFixed(0)} fps`;
 }
 
 // ---------------------------------------------------------------- loop
@@ -257,11 +267,24 @@ function frame() {
   key.target.position.set(c.x, c.y, 0); key.position.copy(key.target.position).add(keyOffset);
   const adv = c.speed * dt; wheelDist += adv; car.advance(adv, c.spin);
   frames++; if (now - fpsT > 1) { fps = frames / (now - fpsT); frames = 0; fpsT = now; }
-  if (state.ghost) { ghost.group.visible = true; poseCar(ghost, state.ghost); ghost.advance(state.ghost.speed * dt, state.ghost.spin); }
-  else ghost.group.visible = false;
+  const seen = new Set();
+  for (const o of state.cars || []) {
+    let m = opps.get(o.id);
+    if (!m || m.livery !== o.livery) {
+      if (m) scene.remove(m.model.group);
+      m = { model: buildLateModel(o.livery), livery: o.livery }; scene.add(m.model.group); opps.set(o.id, m);
+    }
+    m.model.group.visible = true; poseCar(m.model, o); m.model.advance(o.speed * dt, o.spin); seen.add(o.id);
+    const sl = Math.max(0, o.spin * 1.2 + (Math.abs(o.slip) * 57.3 - 5) / 18) + (o.speed > 15 ? 0.04 : 0);
+    if (sl > 0.05 && o.speed > 3) {
+      m.model.group.updateMatrixWorld();
+      for (const i of [2, 3]) dust.emit(m.model.tireWorld(i, v1), Math.cos(o.yaw), Math.sin(o.yaw), Math.min(1.5, sl) * 0.7, o.speed);
+    }
+  }
+  for (const [id, m] of opps) if (!seen.has(id)) m.model.group.visible = false;
 
   // Roost off the rear tires.
-  const slide = Math.max(0, c.spin * 1.2 + (Math.abs(c.slip) * 57.3 - 5) / 18);
+  const slide = Math.max(0, c.spin * 1.2 + (Math.abs(c.slip) * 57.3 - 5) / 18) + (c.speed > 15 ? 0.04 : 0);   // dirt cars always throw some
   if (slide > 0.05 && c.speed > 3) {
     car.group.updateMatrixWorld();
     for (const i of [2, 3]) {

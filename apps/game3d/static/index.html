@@ -14,6 +14,8 @@
   #speed b { font-size: 46px; color: #ffd400; }
   #status { bottom: 14px; left: 14px; font-size: 13px; color: #bbb; }
   #track { bottom: 14px; right: 14px; text-align: right; }
+  #board { top: 128px; left: 14px; font-size: 14px; line-height: 1.45; display: none; }
+  #board .me { color: #ffd400; font-weight: bold; }
   #banner { position: absolute; top: 30%; width: 100%; text-align: center; font-size: 72px; font-weight: bold; color: #ff4c3c; text-shadow: 0 0 20px #000; display: none; }
   #title { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,.55); pointer-events: auto; }
   #title h1 { font-family: Impact, "Arial Black", sans-serif; font-size: 64px; color: #ffd400; margin: 0 0 6px; letter-spacing: 2px; }
@@ -33,18 +35,19 @@
 <div id="hud">
   <div id="vignette"></div>
   <div id="laps" class="box"></div>
+  <div id="board" class="box"></div>
   <div id="speed" class="box"><b>0</b> mph</div>
   <div id="track" class="box"></div>
-  <div id="status" class="box">1/2/3 camera  TAB autopilot  G ghost  R restart  M mute  ESC quit</div>
+  <div id="status" class="box">1/2/3 camera  TAB autopilot  G field on/off  R restart  M mute  ESC quit</div>
   <div id="banner"></div>
   <div id="connecting">connecting to simulator...</div>
   <div id="title" style="display:none">
     <h1>AUTONOMOUS DIRT RACING LEAGUE</h1>
     <h2>#99 Devin Moran tribute late model &middot; 3/8-mile dirt oval &middot; live surface model</h2>
     <div class="menu">
-      <div><b>ENTER</b> fire it up and drive</div>
-      <div><b>SPACE</b> ride along with the AI driver</div>
-      <div><b>G</b> race the AI</div>
+      <div><b>ENTER</b> race the field: 10 laps, you start 6th</div>
+      <div><b>SPACE</b> ride along in the race</div>
+      <div><b>G</b> solo practice</div>
     </div>
     <div class="hint">Up = throttle &nbsp; Down = brake &nbsp; Left/Right = steer &nbsp; (gamepad works too)<br>
       1 driver's eye &nbsp; 2 chase &nbsp; 3 TV camera &nbsp; ESC quits the game<br>

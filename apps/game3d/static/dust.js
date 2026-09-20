@@ -1,7 +1,7 @@
 // Roost: dust particles thrown off the rear tires under wheelspin and slip.
 import * as THREE from 'three';
 
-const MAX = 1500;
+const MAX = 3500;
 
 export class Dust {
   constructor(scene) {
@@ -50,7 +50,7 @@ export class Dust {
       this.vel[j + 2] = 1.5 + Math.random() * 4 + intensity * 3;
       this.life[i] = 0.9 + Math.random() * 1.2;
       this.size[i] = 0.5 + Math.random() * 0.8;
-      this.alpha[i] = 0.55;
+      this.alpha[i] = 0.4;
     }
   }
 
@@ -62,8 +62,8 @@ export class Dust {
       this.vel[j] *= 0.96; this.vel[j + 1] *= 0.96; this.vel[j + 2] -= 4.5 * dt;
       this.pos[j] += this.vel[j] * dt; this.pos[j + 1] += this.vel[j + 1] * dt; this.pos[j + 2] += this.vel[j + 2] * dt;
       if (this.pos[j + 2] < 0.05) { this.pos[j + 2] = 0.05; this.vel[j + 2] = Math.abs(this.vel[j + 2]) * 0.2; }
-      this.size[i] += dt * 1.6;
-      this.alpha[i] = Math.min(0.55, this.life[i] * 0.5);
+      this.size[i] += dt * 1.1;
+      this.alpha[i] = Math.min(0.4, this.life[i] * 0.4);
     }
     const g = this.points.geometry;
     g.attributes.position.needsUpdate = true; g.attributes.size.needsUpdate = true; g.attributes.alpha.needsUpdate = true;

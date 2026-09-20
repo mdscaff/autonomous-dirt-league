@@ -70,7 +70,7 @@ function sideTexture(liv, flip) {
     T(-2.30, 0.66, -1.72, 0.78, liv.navy, '#fff', 'ADRL');
     T(-2.30, 0.50, -1.72, 0.62, '#c8102e', '#fff', 'DOUBLE DOWN');
     T(-2.30, 0.36, -1.72, 0.46, '#1d1d1d', '#fff', 'LATE MODEL');
-    T(-1.62, 0.85, -0.80, 0.92, '#fff', liv.navy, 'TEAM 99');
+    T(-1.62, 0.85, -0.80, 0.92, '#fff', liv.navy, `TEAM ${liv.num}`);
     T(1.80, 0.34, 2.26, 0.44, liv.navy, '#fff', 'ADRL');
     // Rivet lines.
     ctx.fillStyle = 'rgba(0,0,0,0.35)';
@@ -104,7 +104,7 @@ function spoilerTexture(liv) {
     ctx.fillStyle = liv.body; ctx.fillRect(0, 0, w, h);
     ctx.fillStyle = liv.navy; ctx.fillRect(0, h - 10, w, 10);
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = blockFont(92); ctx.fillStyle = '#111';
+    ctx.font = blockFont(92); ctx.fillStyle = liv.spoilerText || '#111';
     ctx.fillText(liv.name.toUpperCase(), w / 2, h / 2);
   });
 }
@@ -120,10 +120,14 @@ function treadTexture() {
 
 export const LIVERIES = {
   // #99 tribute: white with light-blue accents and navy trim.
-  moran99: { num: '99', name: 'Moran', body: '#f5f7f9', accent: '#3fbbef', navy: '#0e2b5e',
-    number: '#ffffff', numberOutline: '#0e2b5e' },
-  ghost1: { num: '1', name: 'Baseline', body: '#e9e9e9', accent: '#c8102e', navy: '#222222',
-    number: '#ffffff', numberOutline: '#222222' },
+  moran99: { num: '99', name: 'Moran', body: '#f5f7f9', accent: '#3fbbef', navy: '#0e2b5e', number: '#ffffff', numberOutline: '#0e2b5e' },
+  // The (fictional) field.
+  red: { num: '7', name: 'Hollis', body: '#d3212b', accent: '#ffffff', navy: '#1a1a1a', number: '#ffffff', numberOutline: '#1a1a1a' },
+  orange: { num: '24', name: 'Reyes', body: '#1b1b1d', accent: '#ff7a1a', navy: '#3a3a3e', number: '#ffffff', numberOutline: '#1b1b1d', spoilerText: '#ff7a1a' },
+  yellow: { num: '18', name: 'Kowalski', body: '#f6c915', accent: '#1d1d1d', navy: '#1d1d1d', number: '#f6c915', numberOutline: '#1d1d1d' },
+  green: { num: '5', name: 'Tanner', body: '#1f8a3b', accent: '#f5f5f5', navy: '#0c3d1a', number: '#ffffff', numberOutline: '#0c3d1a', spoilerText: '#ffffff' },
+  purple: { num: '44', name: 'Boudreaux', body: '#5b2a9d', accent: '#f2c400', navy: '#2a1050', number: '#ffffff', numberOutline: '#2a1050', spoilerText: '#f2c400' },
+  ghost1: { num: '1', name: 'Baseline', body: '#e9e9e9', accent: '#c8102e', navy: '#222222', number: '#ffffff', numberOutline: '#222222' },
 };
 
 function tube(a, b, r, mat) {

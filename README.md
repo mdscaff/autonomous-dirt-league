@@ -60,13 +60,19 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 
 The 3D game runs a **fast tune** on top of the research config (tacky surface,
 22° banking, more downforce and power; AI plans with downforce and braking
-distance): about 16.6 s laps and ~120 mph versus 35 s and 65 mph stock. Pass
+distance): about 15 s laps and ~125 mph versus 35 s and 65 mph stock. Pass
 `--stock` to `server.py` for the unmodified research physics. `configs/default.yaml`
 is never changed by the game.
 
-Title: **ENTER** drive · **SPACE** ride with the AI · **G** race the ghost.
+**Racing:** a 10-lap race against five AI cars (fictional drivers, each with
+their own livery, home lane and pace). Two-wide standing start with a
+countdown, you start 6th. The AI holds lanes, pulls out to pass, tucks in
+behind slower cars and won't chop across a car alongside; car-to-car contact
+is modelled (push-out plus impulse). Live positions, gaps and a finish result.
+
+Title: **ENTER** race the field · **SPACE** ride along in the race · **G** solo practice.
 In game: arrows/WASD or a gamepad · **1/2/3** cameras · **TAB** autopilot ·
-**G** ghost · **R** restart · **M** mute · **F** fullscreen · **ESC** quit
+**G** field on/off · **R** restart · **M** mute · **F** fullscreen · **ESC** quit
 (on the DGX kiosk this also closes the browser). The first browser to
 connect drives; others spectate.
 

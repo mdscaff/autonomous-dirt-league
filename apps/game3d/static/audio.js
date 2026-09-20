@@ -71,7 +71,29 @@ export class EngineAudio {
     this.windGain = ctx.createGain(); this.windGain.gain.value = 0;
     mkNoise().connect(this.windLP).connect(this.windGain).connect(this.master);
 
+    // Nearest rival: a lighter copy of the engine voice, faded by distance.
+    this.other = [];
+    const mix2 = ctx.createGain();
+    for (const [wave, mult, gain] of [[pulse, 4, 0.8], [burble, 2, 0.55], [pulse, 4.03, 0.35]]) {
+      const o = ctx.createOscillator(); o.setPeriodicWave(wave); const g = ctx.createGain(); g.gain.value = gain;
+      o.connect(g).connect(mix2); o.start(); this.other.push({ o, mult });
+    }
+    this.otherLP = ctx.createBiquadFilter(); this.otherLP.type = 'lowpass'; this.otherLP.frequency.value = 600; this.otherLP.Q.value = 1.2;
+    this.otherGain = ctx.createGain(); this.otherGain.gain.value = 0;
+    mix2.connect(this.otherLP).connect(this.otherGain).connect(this.master);
+
     this.prevThrottle = 0; this.popUntil = 0; this.limPhase = 0;
+  }
+
+  // rival = {rpm, throttle} or null; dist in meters from the player's car.
+  updateOther(rival, dist) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    if (!rival) { this.otherGain.gain.setTargetAtTime(0, t, 0.1); return; }
+    const f = Math.max(600, rival.rpm) / 60;
+    for (const x of this.other) x.o.frequency.setTargetAtTime(f * x.mult, t, 0.03);
+    this.otherLP.frequency.setTargetAtTime(300 + rival.throttle * 1500, t, 0.05);
+    this.otherGain.gain.setTargetAtTime((0.25 + 0.4 * rival.throttle) / (1 + (dist / 9) ** 2), t, 0.06);
   }
 
   makeCurve(k) {
