@@ -189,7 +189,17 @@ let frames = 0, fpsT = lastT, fps = 0;
 let camShake = 0;
 
 function updateCamera(dt) {
-  if (window.adrl.freeCam) return;   // debug: leave the camera where a script put it
+  const fc = window.adrl.freeCam;
+  car.setDriverVisible(!!fc || camMode !== 1);
+  if (fc) {   // debug: true = leave the camera alone; {x,y,z,tz,fov} = orbit point in the car's frame
+    if (typeof fc === 'object') {
+      car.group.updateMatrixWorld();
+      camera.position.copy(v1.set(fc.x, fc.y, fc.z).applyMatrix4(car.group.matrixWorld));
+      camera.lookAt(v2.set(fc.tx || 0, fc.ty || 0, fc.tz ?? 0.6).applyMatrix4(car.group.matrixWorld));
+      camera.fov = fc.fov || 40; camera.updateProjectionMatrix();
+    }
+    return;
+  }
   const c = state.car;
   car.group.updateMatrixWorld();
   if (camMode === 1) {
