@@ -36,19 +36,33 @@ from adrl.environment.race_env import DirtOvalEnv
 from adrl.vehicle.engine import Engine
 
 FPS = 60
+
+# Game-only "fast" tune: a tacky, heavily banked bullring and a full-aero super late
+# model. Applied on top of the research config (which stays untouched) unless --stock.
+FAST_TUNE = {
+    "track": {"banking_deg": 14.0},
+    "surface": {"base_friction": 0.86, "min_friction": 0.55, "max_friction": 1.30},
+    "vehicle": {"max_engine_force": 14000.0, "max_brake_force": 15000.0, "downforce_coeff": 4.5, "drag_coeff": 1.0},
+}
+# AI settings swept headless on this tune: 21 s laps, ~92 mph, no crashes over 19 laps
+# as the track dries. Aggression above ~1.0 starts finding the wall.
+FAST_AI = {"aggression": 0.96, "v_max": 55.0, "throttle_max": 0.85, "aero_aware": True, "brake_decel": 7.0}
 SURFACE_EVERY = 12          # surface grid broadcast cadence (5 Hz)
 STATIC = Path(__file__).resolve().parent / "static"
 
 
 class World:
-    def __init__(self, cfg: dict, seed: int, mode: str):
+    def __init__(self, cfg: dict, seed: int, mode: str, ai: dict | None = None, final_drive: float | None = None):
         self.cfg, self.seed = cfg, seed
+        self.ai = ai or {}
+        self.final_drive = final_drive
         self.title = mode == "title"
         self.autopilot = mode != "play"
         self.ghost_on = mode == "race"
         self.human = HumanInput()
-        self.engine = Engine()
-        self.ghost_engine = Engine()
+        self.engine, self.ghost_engine = Engine(), Engine()
+        if final_drive:
+            self.engine.p.final_drive = self.ghost_engine.p.final_drive = final_drive
         self.banner = ("", 0.0)
         self.tick = 0
         self.quit_requested = False
@@ -57,10 +71,10 @@ class World:
     def reset(self) -> None:
         self.env = DirtOvalEnv(self.cfg)
         self.env.reset(seed=self.seed)
-        self.driver = BaselineDriver(self.env)
+        self.driver = BaselineDriver(self.env, **self.ai)
         self.ghost_env = DirtOvalEnv(self.cfg)
         self.ghost_env.reset(seed=self.seed)
-        self.ghost_driver = BaselineDriver(self.ghost_env)
+        self.ghost_driver = BaselineDriver(self.ghost_env, **self.ai)
         self.human.reset()
         self.engine.reset()
         self.ghost_engine.reset()
@@ -260,8 +274,11 @@ def serve_static(port: int) -> None:
     threading.Thread(target=httpd.serve_forever, daemon=True).start()
 
 
-def load_config(path: str) -> dict:
+def load_config(path: str, fast: bool = True) -> dict:
     cfg = yaml.safe_load(Path(path).read_text())
+    if fast:
+        for section, values in FAST_TUNE.items():
+            cfg[section].update(values)
     cfg["sim"]["control_dt"] = 1.0 / FPS
     cfg["sim"]["dt"] = 1.0 / (2 * FPS)
     cfg["sim"]["max_episode_time"] = 1e9
@@ -269,9 +286,9 @@ def load_config(path: str) -> dict:
 
 
 async def main_async(args) -> None:
-    cfg = load_config(args.config if Path(args.config).is_absolute() else str(ROOT / args.config))
+    cfg = load_config(args.config if Path(args.config).is_absolute() else str(ROOT / args.config), fast=not args.stock)
     seed = args.seed if args.seed is not None else cfg["seed"]
-    world = World(cfg, seed, args.mode)
+    world = World(cfg, seed, args.mode, ai=None if args.stock else FAST_AI, final_drive=None if args.stock else 6.0)
     server = Server(world)
     serve_static(args.port)
     async with serve(server.handler, "0.0.0.0", args.ws_port, max_queue=4):
@@ -289,6 +306,7 @@ def main() -> int:
     ap.add_argument("--mode", choices=["title", "play", "demo", "race"], default="title")
     ap.add_argument("--port", type=int, default=8000)
     ap.add_argument("--ws-port", type=int, default=8765)
+    ap.add_argument("--stock", action="store_true", help="use the research config as-is (slower, slicker) instead of the fast game tune")
     ap.add_argument("--on-quit", default="", help="shell command to run when the driver presses ESC")
     args = ap.parse_args()
     try:

@@ -149,7 +149,9 @@ class Vehicle:
 
         # Banking: component of gravity pulls the car down-slope (toward
         # the inside for positive banking), aiding cornering.
-        f_bank = -p.mass * G * np.sin(banking)
+        # Body +y is the car's left, which is the inside of this counter-clockwise
+        # oval, so the down-slope pull is +y.
+        f_bank = p.mass * G * np.sin(banking)
 
         # Equations of motion (body frame).
         ax = (fx_drive_eff - fx_brake - drag - rolling - fy_f * np.sin(st.steer)) / p.mass \

@@ -214,7 +214,7 @@ function updateCamera(dt) {
     const lookLocal = new THREE.Vector3(eye.x + 14 * Math.cos(lookYaw), 14 * Math.sin(lookYaw) + eye.y, eye.z - 0.45);
     const lookW = lookLocal.applyMatrix4(car.group.matrixWorld);
     camera.position.copy(eyeW); camera.lookAt(lookW);
-    camera.fov = 68; camera.updateProjectionMatrix();
+    camera.fov = 68 + Math.min(16, c.speed * 0.32); camera.updateProjectionMatrix();   // widens with speed
     car.setInteriorVisible(true);
   } else if (camMode === 2) {
     const target = v1.set(-8.5, 0.0, 3.2).applyMatrix4(car.group.matrixWorld);

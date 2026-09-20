@@ -157,3 +157,16 @@ def test_env_wall_termination(cfg):
             break
     assert terminated
     assert info.get("termination") in {"wall_contact", "spin"}
+
+
+def test_banking_pulls_toward_the_inside():
+    """On the CCW oval the inside is the car's left (+y): banking must push vy positive."""
+    from adrl.vehicle.dynamics import Vehicle, VehicleParams
+    import numpy as np
+    flat, banked = Vehicle(VehicleParams()), Vehicle(VehicleParams())
+    for v in (flat, banked):
+        v.reset(0.0, 0.0, 0.0, speed=20.0)
+    for _ in range(20):
+        flat.step(0.0, 0.0, 0.0, 0.7, 0.7, 0.0, 0.01)
+        banked.step(0.0, 0.0, 0.0, 0.7, 0.7, np.deg2rad(10.0), 0.01)
+    assert banked.state.y > flat.state.y + 1e-3

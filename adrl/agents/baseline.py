@@ -31,6 +31,10 @@ class BaselineDriver:
         k_crosstrack: float = 0.55,
         k_slip: float = 0.8,
         k_yaw_damp: float = 0.12,
+        v_max: float = 38.0,
+        throttle_max: float = 0.85,
+        aero_aware: bool = False,
+        brake_decel: float | None = None,
     ):
         self.env = env
         self.aggression = aggression
@@ -39,6 +43,10 @@ class BaselineDriver:
         self.k_crosstrack = k_crosstrack
         self.k_slip = k_slip
         self.k_yaw_damp = k_yaw_damp
+        self.v_max = v_max
+        self.throttle_max = throttle_max
+        self.aero_aware = aero_aware   # include downforce in the corner-speed plan
+        self.brake_decel = brake_decel # if set, plan braking by distance instead of lifting early
         self._i_speed = 0.0
 
     def act(self) -> np.ndarray:
@@ -69,11 +77,9 @@ class BaselineDriver:
         steer = float(np.clip(delta / np.deg2rad(p.max_steer_deg), -1, 1))
 
         # ---- speed ----------------------------------------------------
-        horizon = max(2.0 * v, 30.0)
-        kappas = [
-            abs(track.sample(env.s + f)[2])
-            for f in np.linspace(5.0, horizon, 10)
-        ]
+        horizon = max(3.0 * v, 60.0) if self.brake_decel else max(2.0 * v, 30.0)
+        aheads = np.linspace(5.0, horizon, 16 if self.brake_decel else 10)
+        kappas = [abs(track.sample(env.s + f)[2]) for f in aheads]
         kappa_max = max(max(kappas), 1e-5)
         # Grip for speed planning = worst mu over the preview horizon near
         # the current line; the surface is dynamic and slick patches ahead
@@ -84,13 +90,28 @@ class BaselineDriver:
         )
         bank = track.banking
         a_lat = mu * G * np.cos(bank) + G * np.sin(bank)
-        v_target = self.aggression * np.sqrt(a_lat / kappa_max)
-        v_target = min(v_target, 38.0)
+        def corner_limit(kappa: float) -> float:
+            if self.aero_aware:
+                # v^2*kappa = mu*(g*cos(b) + k*v^2/m) + g*sin(b)  ->  solve for v
+                k_aero = 0.5 * 1.225 * p.downforce_coeff
+                denom = kappa - mu * k_aero / p.mass
+                return float(np.sqrt(a_lat / denom)) if denom > 1e-4 else self.v_max
+            return float(np.sqrt(a_lat / kappa))
+
+        if self.brake_decel:
+            # Latest-braking plan: each point ahead allows v = sqrt(v_corner^2 + 2*a*distance).
+            v_target = self.v_max
+            for f, k in zip(aheads, kappas):
+                v_c = self.aggression * corner_limit(max(k, 1e-5))
+                v_target = min(v_target, float(np.sqrt(v_c**2 + 2.0 * self.brake_decel * max(f - 8.0, 0.0))))
+        else:
+            v_target = self.aggression * corner_limit(kappa_max)
+        v_target = min(v_target, self.v_max)
 
         dv = v_target - st.speed
         self._i_speed = float(np.clip(self._i_speed + 0.002 * dv, -0.3, 0.3))
         u = 0.30 * dv + self._i_speed
-        throttle = float(np.clip(u, 0.0, 0.85))
+        throttle = float(np.clip(u, 0.0, self.throttle_max))
         # Throttle cut when the slide gets big: stop feeding the spin.
         slip_deg = abs(np.rad2deg(st.slip_angle))
         if slip_deg > 14.0:

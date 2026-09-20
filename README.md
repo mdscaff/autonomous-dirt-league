@@ -58,6 +58,12 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 .venv/bin/python apps/game3d/server.py --mode demo --port 8420
 ```
 
+The 3D game runs a **fast tune** on top of the research config (tacky surface,
+14° banking, more downforce and power; AI plans with downforce and braking
+distance): about 21 s laps and 90+ mph versus 35 s and 65 mph stock. Pass
+`--stock` to `server.py` for the unmodified research physics. `configs/default.yaml`
+is never changed by the game.
+
 Title: **ENTER** drive · **SPACE** ride with the AI · **G** race the ghost.
 In game: arrows/WASD or a gamepad · **1/2/3** cameras · **TAB** autopilot ·
 **G** ghost · **R** restart · **M** mute · **F** fullscreen · **ESC** quit
